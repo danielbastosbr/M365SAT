@@ -1,0 +1,64 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+M365SAT — PowerShell (5.1 and 7) security assessment tool for Microsoft 365 and Azure tenants. Runs ~270 "inspector" scripts mapped to CIS Benchmarks (M365 and Azure) and produces an HTML or CSV report. There is no build step, no test suite, and no linter config in the repo.
+
+## Running
+
+Requires the external modules: `Az`, `ExchangeOnlineManagement` (3.6.0 recommended on Windows due to WAM issues), `Microsoft.Online.SharePoint.PowerShell` (Windows) or `PnP.PowerShell` (Linux), `Microsoft.Graph`, `Microsoft.Graph.Beta`, `MicrosoftTeams`, `PoShLog`. Module is `#Requires -RunAsAdministrator`.
+
+```powershell
+# Option A: edit $ScriptConfig at the top of the script, then run it (self-elevates on Windows)
+./M365SATTester.ps1
+
+# Option B: import and call directly
+Import-Module ./M365SAT.psd1
+Get-M365SATReport -OutPath ./out -Username admin@tenant.onmicrosoft.com `
+  -EnvironmentType M365 -Modules Exchange -LicenseMode E3 -LicenseLevel L1 `
+  -reportType HTML -LocalMode -SkipChecks
+```
+
+To exercise a single inspector, narrow `-EnvironmentType`/`-Modules`/`-LicenseMode`/`-LicenseLevel` to its folder, or, after connecting (`-SkipLogin` assumes existing sessions), invoke the inspector file directly: it ends with `return Audit-<UUID>` and returns the finding object.
+
+`M365SATConnectionTester.ps1` tests connectivity to each service without running inspectors.
+
+## Architecture
+
+**Entry point**: `M365SAT.psm1` → `Get-M365SATReport`. It dot-sources everything in `core/` and `modules/welcome/` at call time (functions are not loaded at import), then runs this pipeline:
+
+1. Unless `-SkipChecks`: `Check-M365SATUpdates`, `Check-M365SATModules` (installs missing), `Update-M365SATModules`, `Check-M365SATModuleDuplicates` (removes older versions). These modify the user's installed modules — use `-SkipChecks` during development.
+2. Unless `-SkipLogin`: `Connect-M365SAT` (`core/Connect-M365SAT.ps1`) authenticates per module via `core/m365connectors/*`, honouring `-Environment` (Default/USGovGCCHigh/USGovDoD/Germany/China), and returns the tenant org name. Graph is authenticated first because Teams depends on it. On PS7, the SharePoint module is loaded with `-UseWindowsPowerShell`; on Linux, PnP is used instead.
+3. Inspector discovery (`core/Get-M365SATChecks.ps1`):
+   - `-LocalMode` → `Get-M365SATLocalChecks` reads the repo's `inspectors/` folder.
+   - Without `-LocalMode` → `Get-M365SATChecks` **deletes `inspectors/` and replaces it** with a download of `Karmakstylez/M365SAT-Inspectors` (production branch). Always pass `-LocalMode` when testing local inspector changes, or your edits are wiped.
+4. Execution (`core/Invoke-M365SATChecks.ps1`): each inspector path is run with `Invoke-Expression` in the caller's scope (so inspectors see variables such as `$OutPath`). Findings are collected into an object `{Findings, StartDate, EndDate, Inspectors, InspectorsCount}`. Note: the non-LocalMode, non-experimental branch in the `.psm1` calls `Invoke-M365SATChecks`, which does not exist — only `Invoke-M365SATChecksNew` is defined.
+5. Report: `core/Get-M365SATHTMLReport.ps1` (Bootstrap/FontAwesome HTML, the only fully working format) or `core/Get-M365SATCSVReport.ps1`. XML/CSMS fall back to HTML.
+6. `Disconnect-M365SAT`, cleanup, `Close-Logger`.
+
+Logging uses PoShLog (`core/Invoke-M365SATLogger.ps1`); inspectors call `Write-WarningLog` / `Write-ErrorLog`. Logs go to `log/`.
+
+## Inspectors
+
+Folder layout drives selection — the path segments must match the parameter values exactly:
+
+- M365: `inspectors/M365/<Module>/<E3|E5>/<L1|L2>/*.ps1` where `<Module>` ∈ `Azure, Exchange, Office365, Sharepoint, Teams`
+- Azure: `inspectors/AZURE/<L1|L2>/*.ps1` (no license mode)
+- Custom: `inspectors/CUSTOM/<Module>/<E3|E5>/<L1|L2>/*.ps1` (`-EnvironmentType CUSTOM`), naming `CSTM-<Az|Ex|O365|Sp|Tms><NNN>.ps1`
+
+File name = UUID (e.g. `CISMEx122.ps1`, `CISAz2010.ps1`). Each inspector is self-contained and follows a fixed shape:
+
+- `Build-<UUID>` creates a PSObject with required fields: `UUID, ID, Title, ProductFamily, DefaultValue, ExpectedValue, ReturnedValue, Status, RiskScore, RiskRating, Description, Impact, Remediation, References` (array of `@{Name; URL}`). The report depends on all of them.
+- `Audit-<UUID>` performs the check inside `try/catch`; returns `Status` `FAIL` (with RiskScore/RiskRating), `PASS` (`RiskScore "0"`, `RiskRating "None"`), or `UNKNOWN` from the `catch` with PoShLog error logging.
+- The file's last line is `return Audit-<UUID>` — the function name must match exactly, or the inspector returns nothing.
+- Helpers are duplicated per file rather than shared (e.g. `Invoke-MultiMicrosoftAPI`, which calls internal Azure portal APIs such as `main.iam.ad.ext.azure.com`).
+
+Use an existing inspector in the same folder as the template; the README section 5.1.1 shows the canonical skeleton.
+
+## Conventions
+
+- Code must run on Windows PowerShell 5.1 and PowerShell 7 (Windows/Linux/macOS). Branch on `$IsWindows` / `$IsLinux` / `$IsMac` when touching filesystem paths or SharePoint connectivity.
+- Public exports are declared in `M365SAT.psd1` (`FunctionsToExport`); bump `ModuleVersion` there and the version header in `M365SAT.psm1` together, and record changes in `CHANGELOG.md`.
+- Upstream is `Karmakstylez/M365SAT`; inspectors are also published separately in `Karmakstylez/M365SAT-Inspectors`.

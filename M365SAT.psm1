@@ -227,7 +227,7 @@ function Get-M365SATReport
 			Write-Host "$(Get-Date): Creating Directories..."
 			New-Item -ItemType Directory -Force -Path "$($OutPath)\evidence" | Out-Null
 			Write-Host "$(Get-Date): Executing Inspectors in SingleThread Mode..."
-			$object = Invoke-M365SATChecks -inspectors $inspectorlist -Directory $Directory
+			$object = Invoke-M365SATChecksNew -inspectors $inspectorlist -Directory $Directory
 		}
 	}
 	Write-Host "$(Get-Date): Generating Report..."

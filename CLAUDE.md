@@ -34,7 +34,7 @@ To exercise a single inspector, narrow `-EnvironmentType`/`-Modules`/`-LicenseMo
 3. Inspector discovery (`core/Get-M365SATChecks.ps1`):
    - `-LocalMode` → `Get-M365SATLocalChecks` reads the repo's `inspectors/` folder.
    - Without `-LocalMode` → `Get-M365SATChecks` **deletes `inspectors/` and replaces it** with a download of `Karmakstylez/M365SAT-Inspectors` (production branch). Always pass `-LocalMode` when testing local inspector changes, or your edits are wiped.
-4. Execution (`core/Invoke-M365SATChecks.ps1`): each inspector path is run with `Invoke-Expression` in the caller's scope (so inspectors see variables such as `$OutPath`). Findings are collected into an object `{Findings, StartDate, EndDate, Inspectors, InspectorsCount}`. Note: the non-LocalMode, non-experimental branch in the `.psm1` calls `Invoke-M365SATChecks`, which does not exist — only `Invoke-M365SATChecksNew` is defined.
+4. Execution (`core/Invoke-M365SATChecks.ps1`): each inspector path is run with `Invoke-Expression` in the caller's scope (so inspectors see variables such as `$OutPath`). Findings are collected into an object `{Findings, StartDate, EndDate, Inspectors, InspectorsCount}`.
 5. Report: `core/Get-M365SATHTMLReport.ps1` (Bootstrap/FontAwesome HTML, the only fully working format) or `core/Get-M365SATCSVReport.ps1`. XML/CSMS fall back to HTML.
 6. `Disconnect-M365SAT`, cleanup, `Close-Logger`.
 
@@ -56,6 +56,10 @@ File name = UUID (e.g. `CISMEx122.ps1`, `CISAz2010.ps1`). Each inspector is self
 - Helpers are duplicated per file rather than shared (e.g. `Invoke-MultiMicrosoftAPI`, which calls internal Azure portal APIs such as `main.iam.ad.ext.azure.com`).
 
 Use an existing inspector in the same folder as the template; the README section 5.1.1 shows the canonical skeleton.
+
+## CIS coverage
+
+`docs/CIS-GAP-v7.md` maps every inspector to CIS M365 v7.0.0 / Azure v6.0.0 (new controls to build, IDs to renumber, Azure identity controls relocated into M365, obsolete inspectors). Regenerate with `tools/cis-gap/run.sh`; requirement data comes from Prowler's compliance JSON. Manual mapping corrections go in `MANUAL` in `tools/cis-gap/gap.py`, control summaries/priorities in `NEW` in `tools/cis-gap/report.py`.
 
 ## Conventions
 

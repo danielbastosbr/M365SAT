@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-M365SAT — PowerShell (5.1 and 7) security assessment tool for Microsoft 365 and Azure tenants. Runs ~270 "inspector" scripts mapped to CIS Benchmarks (M365 and Azure) and produces an HTML or CSV report. There is no build step, no test suite, and no linter config in the repo.
+M365SAT — PowerShell (5.1 and 7) security assessment tool for Microsoft 365 and Azure tenants. Runs ~270 "inspector" scripts mapped to CIS Benchmarks (M365 and Azure) and produces an HTML or CSV report. There is no build step and no linter config. Offline behaviour tests for inspectors live in `tests/` (see below).
 
 ## Running
 
@@ -22,6 +22,15 @@ Get-M365SATReport -OutPath ./out -Username admin@tenant.onmicrosoft.com `
 ```
 
 To exercise a single inspector, narrow `-EnvironmentType`/`-Modules`/`-LicenseMode`/`-LicenseLevel` to its folder, or, after connecting (`-SkipLogin` assumes existing sessions), invoke the inspector file directly: it ends with `return Audit-<UUID>` and returns the finding object.
+
+Offline tests (no tenant needed; mock `Invoke-MgGraphRequest` and Exchange cmdlets, assert PASS/FAIL/UNKNOWN per fixture):
+
+```bash
+pwsh -NoProfile -File ./tests/Invoke-InspectorMockTests.ps1               # all cases
+pwsh -NoProfile -File ./tests/Invoke-InspectorMockTests.ps1 -Filter CISM7Az52*   # one inspector family
+```
+
+Add a PASS and a FAIL case to `$Cases` for every new inspector. Syntax-only check for any file: `[System.Management.Automation.Language.Parser]::ParseFile(...)`.
 
 `M365SATConnectionTester.ps1` tests connectivity to each service without running inspectors.
 
@@ -56,6 +65,10 @@ File name = UUID (e.g. `CISMEx122.ps1`, `CISAz2010.ps1`). Each inspector is self
 - Helpers are duplicated per file rather than shared (e.g. `Invoke-MultiMicrosoftAPI`, which calls internal Azure portal APIs such as `main.iam.ad.ext.azure.com`).
 
 Use an existing inspector in the same folder as the template; the README section 5.1.1 shows the canonical skeleton.
+
+CIS M365 v7.0.0 inspectors use the `CISM7<Area><ID>` UUID/file name (e.g. `CISM7Az52212`, `CISM7Ex655`, `CISM7Int41` for Intune) because v7 renumbered controls and the v4 names (`CISMAz5228`, …) already exist with different meanings. They call Graph through `Invoke-MgGraphRequest -OutputType PSObject` (with a local paging helper) instead of the `Get-Mg*` cmdlets, and write raw evidence as JSON to `$OutPath`. `ProductFamily` must be one of the values the HTML report groups by (`Microsoft Azure`, `Microsoft Exchange`, `Microsoft Office 365`, `Microsoft SharePoint`, `Microsoft Teams`); Intune checks use `Microsoft Azure`. New Graph permissions must also be added to the scope lists in `core/m365connectors/Connect-MicrosoftGraph.ps1`.
+
+Module/connection coupling: Graph is only connected for `-Modules` Teams/Graph/Exchange/SecurityCompliance/Sharepoint or All, and Security & Compliance (`Get-DlpCompliancePolicy`, …) only with `-Modules All`.
 
 ## CIS coverage
 

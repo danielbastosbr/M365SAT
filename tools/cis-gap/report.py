@@ -73,7 +73,7 @@ missing7 = [x for x in m7 if not x["covered_by"]]
 missing6 = [x for x in a6 if not x["covered_by"]]
 mapped = [r for r in repo if r["target"]]
 relocated = [r for r in mapped if r["family"] == "AZURE" and r["target"]["family"] == "M365 v7"]
-renum = [r for r in mapped if r["family"] == "M365" and r["target"]["family"] == "M365 v7" and r["target"]["id"] != r["id"]]
+renum = [r for r in mapped if r["family"] == "M365" and r["target"]["family"] == "M365 v7" and r["target"]["id"] != r["id"] and r["target"]["method"] != "native"]
 obsolete = [r for r in repo if not r["target"]]
 review = [r for r in mapped if r["target"]["method"] == "tokens" or r["target"]["score"] < 0.7]
 prio = Counter(NEW[x["id"]][1] for x in missing7 if NEW.get(x["id"]))
@@ -88,7 +88,7 @@ w("Regenerar: `tools/cis-gap/run.sh`. Método de cruzamento: check do Prowler em
   "nome de configuração citado no título → similaridade da descrição → tokens do título → mesmo ID.\n")
 w("## Resumo\n")
 w("| Indicador | Valor |\n|---|---|")
-w(f"| Inspectors no repo | {len(repo)} |")
+w(f"| Inspectors no repo | {len(repo)} (nativos v7: {sum(1 for r in repo if r['target'] and r['target']['method'] == 'native')}) |")
 w(f"| Mapeados para v7/v6 | {len(mapped)} |")
 w(f"| Sem equivalente (obsoletos/removidos) | {len(obsolete)} |")
 w(f"| CIS M365 v7 — controles | {len(m7)} |")

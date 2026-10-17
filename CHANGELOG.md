@@ -168,3 +168,9 @@ For detailed changes, please refer to the Releases section.
 - **CIS Azure Benchmark**: Implemented version 3.1.0 of the CIS Azure Benchmark. **Status: DONE**
 - [Issue #39](https://github.com/asterictnl-lvdw/M365SAT/issues/39) **Status: DONE**
 - **PnP PowerShell Integration**: Transitioned to using PnP.Powershell alongside the Microsoft SharePoint module for enhanced compatibility. **Status: DONE**
+
+### Unreleased
+- **CIS Microsoft 365 v7.0.0 (priority A)**: Added 14 inspectors (`CISM7*`) for Intune compliance/enrollment, Entra device local admins and LAPS, app secret lifetime, Conditional Access (sign-in risk, device code flow, authentication transfer, token protection), PIM, Copilot DLP, transport rule SCL bypass and Reject Direct Send. **Status: DONE**
+- **Graph scopes**: Added `Policy.Read.DeviceConfiguration` and `RoleAssignmentSchedule.Read.Directory`. **Status: DONE**
+- **Default run mode**: Fixed call to undefined `Invoke-M365SATChecks`. **Status: FIXED**
+- **Offline tests**: Added `tests/Invoke-InspectorMockTests.ps1` (mocked Graph/Exchange). **Status: DONE**

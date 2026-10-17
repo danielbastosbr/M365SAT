@@ -93,6 +93,10 @@ for ins in repo:
     if not ins["uuid"]:
         continue
     is_az = ins["path"].startswith("inspectors/AZURE/")
+    if "v7.0.0" in ins["bench"]:
+        native = next((t for t in m7 if t["Id"] == ins["id"]), None)
+        rows.append(dict(ins, family="M365", target=native and dict(family="M365 v7", id=native["Id"], method="native", score=1.0)))
+        continue
     src = (a3_by_id if is_az else m4_by_id).get(ins["id"] or "")
     title = ins["title"] or ""
     cands = []

@@ -53,7 +53,8 @@ function Invoke-MicrosoftGraphConnection {
                     "DeviceManagementConfiguration.Read.All", "User.Read.All", "Policy.Read.All",
                     "DeviceManagementManagedDevices.Read.All", "DeviceManagementApps.Read.All", "Group.Read.All",
                     "UserAuthenticationMethod.Read.All", "GroupMember.Read.All", "Organization.Read.All",
-                    "Domain.Read.All", "AccessReview.Read.All", "SecurityEvents.Read.All", "AuditLog.Read.All"
+                    "Domain.Read.All", "AccessReview.Read.All", "SecurityEvents.Read.All", "AuditLog.Read.All",
+                    "Policy.Read.DeviceConfiguration", "RoleAssignmentSchedule.Read.Directory"
                 ) -Credential $Credential -ErrorAction Stop | Out-Null
             }
             else {
@@ -62,7 +63,8 @@ function Invoke-MicrosoftGraphConnection {
                     "DeviceManagementConfiguration.Read.All", "User.Read.All", "Policy.Read.All",
                     "DeviceManagementManagedDevices.Read.All", "DeviceManagementApps.Read.All", "Group.Read.All",
                     "UserAuthenticationMethod.Read.All", "GroupMember.Read.All", "Organization.Read.All",
-                    "Domain.Read.All", "AccessReview.Read.All", "SecurityEvents.Read.All", "AuditLog.Read.All"
+                    "Domain.Read.All", "AccessReview.Read.All", "SecurityEvents.Read.All", "AuditLog.Read.All",
+                    "Policy.Read.DeviceConfiguration", "RoleAssignmentSchedule.Read.Directory"
                 ) -ErrorAction Stop | Out-Null
             }
 

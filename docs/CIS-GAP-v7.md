@@ -9,12 +9,12 @@ Regenerar: `tools/cis-gap/run.sh`. Método de cruzamento: check do Prowler em co
 
 | Indicador | Valor |
 |---|---|
-| Inspectors no repo | 273 |
-| Mapeados para v7/v6 | 204 |
+| Inspectors no repo | 287 (nativos v7: 14) |
+| Mapeados para v7/v6 | 218 |
 | Sem equivalente (obsoletos/removidos) | 69 |
 | CIS M365 v7 — controles | 160 |
-| CIS M365 v7 — cobertos | 115 (71%) |
-| CIS M365 v7 — **a criar** | **45** (A=15, B=15, C=15) |
+| CIS M365 v7 — cobertos | 129 (80%) |
+| CIS M365 v7 — **a criar** | **31** (A=1, B=15, C=15) |
 | CIS Azure v6 — controles / cobertos / a criar | 127 / 76 / 51 |
 | Inspectors Azure que migram para o M365 v7 | 15 |
 | Inspectors M365 com ID renumerado | 7 |
@@ -28,20 +28,6 @@ Prioridade: **A** = alto impacto de segurança e automatizável via Graph/EXO; *
 | ID v7 | Controle | Perfil | Tipo | Prior. | Fonte de dados | Check Prowler |
 |---|---|---|---|---|---|---|
 | 2.2.1 | Monitorar sign-in de contas break-glass com alerta | E5 Level 1 | Manual | A | Graph auditLogs/signIns + alert rule (parcialmente manual) | `—` |
-| 3.2.3 | DLP cobrindo Microsoft 365 Copilot (prompts e respostas) | E5 Level 1 | Automated | A | Get-DlpCompliancePolicy (Locations Copilot) | `—` |
-| 4.1 | Dispositivo sem compliance policy = não conforme | E3 Level 1 | Automated | A | Graph deviceManagement/settings (secureByDefault) | `intune_device_compliance_policy_unassigned_devices_not_compliant_by_default` |
-| 4.2 | Bloquear enrollment de dispositivo pessoal | E3 Level 1 | Automated | A | Graph deviceManagement/deviceEnrollmentConfigurations | `—` |
-| 5.1.4.3 | Global Admin não vira admin local no join | E3 Level 1 | Automated | A | Graph policies/deviceRegistrationPolicy | `entra_device_registration_global_admins_not_local_admins` |
-| 5.1.4.4 | Usuário que registra não vira admin local | E3 Level 1 | Automated | A | Graph policies/deviceRegistrationPolicy | `entra_device_registration_registering_user_not_local_admin` |
-| 5.1.4.5 | Cloud LAPS habilitado | E3 Level 1 | Automated | A | Graph policies/deviceRegistrationPolicy (localAdminPassword) | `entra_device_registration_laps_enabled` |
-| 5.1.5.4 | Validade máxima de client secret | E3 Level 1 | Automated | A | Graph policies/defaultAppManagementPolicy | `entra_default_app_management_policy_enabled` |
-| 5.2.2.8 | CA bloqueia sign-in de risco médio/alto | E5 Level 2 | Automated | A | Graph identity/conditionalAccess/policies | `entra_conditional_access_policy_block_high_medium_sign_in_risk` |
-| 5.2.2.12 | CA bloqueia device code flow | E3 Level 1 | Automated | A | Graph identity/conditionalAccess/policies | `entra_conditional_access_policy_device_code_flow_blocked` |
-| 5.2.2.16 | CA com Token Protection | E3 Level 2 | Automated | A | Graph identity/conditionalAccess/policies (sessionControls) | `entra_conditional_access_policy_token_protection_enforced` |
-| 5.2.2.17 | CA bloqueia authentication transfer | E3 Level 1 | Automated | A | Graph identity/conditionalAccess/policies (authenticationFlows) | `entra_conditional_access_policy_authentication_transfer_blocked` |
-| 5.3.1 | PIM em uso para roles privilegiadas | E5 Level 2 | Automated | A | Graph roleManagement/directory/roleEligibilitySchedules | `—` |
-| 6.2.2 | Transport rule não define SCL -1 (bypass de spam) | E3 Level 1 | Automated | A | Get-TransportRule | `exchange_transport_rules_whitelist_disabled` |
-| 6.5.5 | Reject Direct Send habilitado | E3 Level 2 | Automated | A | Get-OrganizationConfig (RejectDirectSend) | `exchange_organization_reject_direct_send_enabled` |
 | 2.1.15 | Política anti-spam outbound padrão configurada | E3 Level 1 | Automated | B | Get-HostedOutboundSpamFilterPolicy (Default) | `defender_antispam_outbound_policy_configured` |
 | 5.1.3.1 | Usuário comum não cria security groups | E3 Level 1 | Automated | B | Graph policies/authorizationPolicy | `entra_policy_default_user_cannot_create_security_groups` |
 | 5.1.4.1 | Entra join restrito a usuários selecionados | E3 Level 2 | Automated | B | Graph policies/deviceRegistrationPolicy | `entra_device_registration_join_restricted` |
